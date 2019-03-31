@@ -1,6 +1,7 @@
 import config
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+import utils
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -21,6 +22,24 @@ def error(update, context):
     logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
+def detect_message_url_redirects(update, context):
+    """Find urls in user messages and detect their HTTP redirects. If any, will reply the result."""
+    redirect_data = []
+    replay_texts = []
+    urls = utils.url_detector(update.message.text)
+    for url in urls:
+        redirects, final_url = utils.detect_redirects(url)
+        redirect_data.append({'url': url, 'redirects': redirects, 'final_url': final_url})
+    for element in redirect_data:
+        if element['redirects']:
+            text = '%s does %d HTTP redirect(s) before reaching %s .' % (element['url'], len(element['redirects'])
+                                                                       , element['final_url'])
+            replay_texts.append(text)
+
+    if replay_texts:
+        update.message.reply_text('\n'.join(replay_texts))
+
+
 def main():
     """Start the bot."""
     # Create the Updater and pass it your bot's token.
@@ -36,6 +55,9 @@ def main():
 
     # log all errors
     dp.add_error_handler(error)
+
+    # on noncommand i.e message - echo the message on Telegram
+    dp.add_handler(MessageHandler(Filters.text, detect_message_url_redirects))
 
     # Start the Bot
     updater.start_polling()
