@@ -34,7 +34,9 @@ def detect_message_url_redirects(update, context):
         if element['redirects']:
             text = '%s does %d HTTP redirect(s) before reaching %s .' % (element['url'], len(element['redirects'])
                                                                        , element['final_url'])
-            replay_texts.append(text)
+        else:
+            text = '%s is a direct link.' % element['url']
+        replay_texts.append(text)
 
     if replay_texts:
         update.message.reply_text('\n'.join(replay_texts), disable_web_page_preview=True)
