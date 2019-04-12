@@ -54,6 +54,7 @@ def main():
 
     # on different commands - answer in Telegram
     dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("link", detect_message_url_redirects))
 
     # log all errors
     dp.add_error_handler(error)
